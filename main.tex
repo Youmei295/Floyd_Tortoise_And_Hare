@@ -1,6 +1,8 @@
 \documentclass[12pt, letterpaper]{article}
 \usepackage{graphicx} % Required for inserting images
 \usepackage[utf8]{inputenc}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
 \date{June 2025}
 \setlength{\parskip}{1em}
 \setlength{\parindent}{0em}
@@ -27,15 +29,52 @@ In this document, we will explore the theory behind Floyd's Tortoise and Hare al
 As we have known, a singly linked list is a linear collection of data elements whose order is not given by their physical placement in memory. Instead, each element points to the next. Each element is a node, which in its most basic form contains data and a reference to the next node.
 
 Visualization:
+\begin{center}
+\begin{tikzpicture}[
+  node/.style={draw, circle, minimum size=1cm},
+  pointer/.style={draw, -{Stealth[length=3mm]}, thick}
+]
 
-A simple C++ implementation of node:
+% Nodes
+\node[node] (n1) at (0,0) {A};
+\node[node] (n2) at (3,0) {B};
+\node[node] (n3) at (6,0) {C};
+\node at (9,0) {NULL};
+
+% Arrows
+\draw[pointer] (n1) -- (n2);
+\draw[pointer] (n2) -- (n3);
+\draw[pointer] (n3.east) -- (8.4,0);
+
+\end{tikzpicture}
+\end{center}
 \subsection{FLoyd's Tortoise and Hare}
 \subsubsection{Cycle}
 First, let us consider this example: Given that we have node A that points to node B, node B points to node C, and node C points back to node A. We can notice that when we traverse any linked list that contains these three nodes , we can never reach the endpoint (nullptr) since we are stuck on path \( A \rightarrow B \rightarrow C \rightarrow A\rightarrow \cdots \) This path is called a cycle.
 In general, a cycle is a path that starts at node N and, after traversal, returns back to node N. To be more specific, a path: \( N_1 \rightarrow N_2 \rightarrow \cdots \rightarrow N_n \rightarrow N_1 \) that when we start traversing from any node in it, we will always return back to that node, is called a cycle.
 
 Visualization:
-\subsubsection{Floyd's Tortoise And Hare}
+\begin{center}
+\begin{tikzpicture}[
+  node/.style={draw, circle, minimum size=1cm},
+  pointer/.style={draw, -{Stealth[length=3mm]}, thick}
+]
+
+% Nodes
+\node[node] (n1) at (0,0) {A};
+\node[node] (n2) at (3,0) {B};
+\node[node] (n3) at (6,0) {C};
+
+% Arrows between nodes
+\draw[pointer] (n1.east) -- (n2.west);
+\draw[pointer] (n2.east) -- (n3.west);
+
+% Curved arrow from C back to A (up and around)
+\draw[pointer] (n3.north) to[out=60, in=120, looseness=1.8] (n1.north);
+
+\end{tikzpicture}
+\end{center}
+\subsubsection{Algorithm}
 We will start with two pointers \(\tortoise\) and \(\hare\) (shorts for tortoise and hare), both begin at the head of the linked list. Then, we let them traverse the linked list, \(\tortoise\) traverses one node in one step whereas \(\hare\) traverses two nodes in one step. There will be two outcomes:
 \begin{itemize}
 \item \(\hare\) reaches the end of the singly linked list (nullptr). In this case, there exist no cycles, otherwise \(\hare\) would not have been able to reach nullptr.
@@ -70,5 +109,4 @@ n  = b-c
 This mean after \(a\) steps, the pointer that remains in the cycle will reach the start of the cycle, and so does the other node that start again from the head of the linked list.
 
 In conclusion, the node where they meet again is the beginning of the cycle.
-
 \end{document}
