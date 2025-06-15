@@ -40,6 +40,7 @@ We will start with two pointers \(\tortoise\) and \(\hare\) (shorts for tortoise
 \begin{itemize}
 \item \(\hare\) reaches the end of the singly linked list (nullptr). In this case, there exist no cycles, otherwise \(\hare\) would not have been able to reach nullptr.
 \item \(\hare\) and \(\tortoise\) "meet" at some node. This means that there exists a cycle in the linked list, otherwise \(\hare\) would not have been able to meet \(\tortoise\). Then we move one pointer back to the head of the linked list, the other remains where they meet. We let both of them traverse with the speed of one node per step. The node where they meet is the beginning of the cycle.
+\end{itemize}
 \subsection{Theoretical Background}
 FTH works because \(\hare\) traverses the linked list faster than \(\tortoise\), so if there is no cycle and the linked list is a straight path, they will never meet and \(\hare\) will be able to reach the end (nullptr). Only with the help of a cycle can \(\tortoise\) catch up to and meet \(\hare\). Now, i will explain the method we use to detect the beginning of the cycle.
 
@@ -70,5 +71,4 @@ This mean after \(a\) steps, the pointer that remains in the cycle will reach th
 
 In conclusion, the node where they meet again is the beginning of the cycle.
 
-\end{itemize}
 \end{document}
