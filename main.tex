@@ -1,65 +1,68 @@
 \documentclass[12pt, letterpaper]{article}
-\usepackage{graphicx} % Required for inserting images
+\usepackage{graphicx}
 \usepackage[utf8]{inputenc}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta}
+\usepackage{amsmath}
+\usetikzlibrary{arrows.meta, shapes.geometric}
+
 \date{June 2025}
 \setlength{\parskip}{1em}
 \setlength{\parindent}{0em}
 \renewcommand{\thesection}{\Roman{section}}
 \renewcommand{\thesubsection}{\arabic{subsection}}
 \renewcommand{\thesubsubsection}{\alph{subsubsection}}
-\newcommand{\tortoise}{\textit{t}}
-\newcommand{\hare}{\textit{h}}
-\begin{document}
-\title{Floyd's Tortoise And Hare}
-\author{Huiri Chen}
 
+% Custom commands for the pointers
+\newcommand{\tortoise}{\textit{tortoise}}
+\newcommand{\hare}{\textit{hare}}
+
+\begin{document}
+\title{Floyd's Tortoise and Hare}
+\author{Huiri Chen}
 \maketitle
 
 \section{Introduction}  
-In the field of computer science, especially in the study of data structures and algorithms, efficiently detecting cycles in data sequences is a fundamental problem. Floyd's Tortoise and Hare algorithm, also known as the cycle detection algorithm, provides a clever and efficient solution to this problem. Developed by Robert W. Floyd in 1967, the algorithm is both time-efficient and memory-efficient, requiring only constant space and linear time.
+In the field of computer science, particularly within the study of data structures and algorithms, efficiently detecting cycles in data sequences is a fundamental problem. Floyd's Tortoise and Hare algorithm, also known as the cycle detection algorithm, provides an elegant and highly optimized solution to this problem. Developed by Robert W. Floyd in 1967, the algorithm is celebrated for its efficiency, requiring only constant space $\mathcal{O}(1)$ and linear time $\mathcal{O}(n)$.
 
-The central idea of the algorithm involves using two pointers that traverse a sequence at different speeds — a "tortoise" that moves one step at a time, and a "hare" that moves two steps at a time. If there is a cycle in the sequence, the fast-moving hare will eventually meet the slow-moving tortoise within the cycle. This approach is widely used in detecting cycles in linked lists and in various applications such as functional graph traversal and pseudo-random number generation.
+The central idea involves using two pointers that traverse a sequence at different speeds—a slow-moving ``\tortoise'' that takes one step at a time, and a fast-moving ``\hare'' that takes two steps at a time. If the sequence contains a cycle, the faster hare will eventually overlap with the slower tortoise from behind. This approach is widely used to detect cycles in linked lists, analyze functional graph traversals, and evaluate pseudo-random number generators.
 
-In this document, we will explore the theory behind Floyd's Tortoise and Hare algorithm, walk through an implementation, analyze its performance, and discuss its applications and limitations.
+In this document, we will explore the theory behind Floyd's Tortoise and Hare algorithm, visually walk through its mechanics, and mathematically prove how it locates the exact starting node of a cycle.
 
-\section{Singly Linked List}
-\subsection{Linked List}
-As we have known, a singly linked list is a linear collection of data elements whose order is not given by their physical placement in memory. Instead, each element points to the next. Each element is a node, which in its most basic form contains data and a reference to the next node.
+\section{Singly Linked Lists and Cycles}
 
-Visualization:
+\subsection{Standard Linked List}
+A singly linked list is a linear collection of data elements where the order is dictated by pointers rather than contiguous physical placement in memory. Each element, called a node, contains data and a reference (or pointer) to the next node in the sequence. The list ends when a node points to a null reference.
+
+\textbf{Visualization:}
 \begin{center}
 \begin{tikzpicture}[
-  node/.style={draw, circle, minimum size=1cm},
+  node/.style={draw, circle, fill=blue!5, minimum size=1cm, thick},
   pointer/.style={draw, -{Stealth[length=3mm]}, thick}
 ]
-
 % Nodes
 \node[node] (n1) at (0,0) {A};
 \node[node] (n2) at (3,0) {B};
 \node[node] (n3) at (6,0) {C};
-\node at (9,0) {NULL};
+\node[font=\bfseries] (n4) at (9,0) {NULL};
 
 % Arrows
 \draw[pointer] (n1) -- (n2);
 \draw[pointer] (n2) -- (n3);
-\draw[pointer] (n3.east) -- (8.4,0);
-
+\draw[pointer] (n3) -- (n4);
 \end{tikzpicture}
 \end{center}
-\subsection{FLoyd's Tortoise and Hare}
-\subsubsection{Cycle}
-First, let us consider this example: Given that we have node A that points to node B, node B points to node C, and node C points back to node A. We can notice that when we traverse any linked list that contains these three nodes , we can never reach the endpoint (nullptr) since we are stuck on path \( A \rightarrow B \rightarrow C \rightarrow A\rightarrow \cdots \) This path is called a cycle.
-In general, a cycle is a path that starts at node N and, after traversal, returns back to node N. To be more specific, a path: \( N_1 \rightarrow N_2 \rightarrow \cdots \rightarrow N_n \rightarrow N_1 \) that when we start traversing from any node in it, we will always return back to that node, is called a cycle.
 
-Visualization:
+\subsection{Defining a Cycle}
+Consider a scenario where node A points to node B, node B points to node C, and node C points back to node A. Traversing this list traps you in an infinite loop: $A \rightarrow B \rightarrow C \rightarrow A \rightarrow \cdots$. You will never reach a \texttt{nullptr}. 
+
+In general, a cycle exists if a traversal path starts at a node $N_i$ and, by continuously following the pointers, eventually returns to $N_i$. 
+
+\textbf{Visualization of a Cycle:}
 \begin{center}
 \begin{tikzpicture}[
-  node/.style={draw, circle, minimum size=1cm},
+  node/.style={draw, circle, fill=red!5, minimum size=1cm, thick},
   pointer/.style={draw, -{Stealth[length=3mm]}, thick}
 ]
-
 % Nodes
 \node[node] (n1) at (0,0) {A};
 \node[node] (n2) at (3,0) {B};
@@ -69,44 +72,97 @@ Visualization:
 \draw[pointer] (n1.east) -- (n2.west);
 \draw[pointer] (n2.east) -- (n3.west);
 
-% Curved arrow from C back to A (up and around)
-\draw[pointer] (n3.north) to[out=60, in=120, looseness=1.8] (n1.north);
+% Curved arrow from C back to A
+\draw[pointer] (n3.north) to[out=135, in=45, looseness=1.2] (n1.north);
+\end{tikzpicture}
+\end{center}
+
+\section{The Algorithm}
+The algorithm executes in two distinct phases: determining if a cycle exists, and locating the entry point of the cycle.
+
+\textbf{Phase 1: Detection}
+We initialize two pointers, \(\tortoise\) and \(\hare\), both starting at the head of the linked list. As we iterate through the list:
+\begin{itemize}
+    \item \(\tortoise\) advances one node per step.
+    \item \(\hare\) advances two nodes per step.
+\end{itemize}
+If \(\hare\) (or its next pointer) reaches \texttt{nullptr}, the list terminates linearly, confirming that \textbf{no cycle exists}. However, if \(\hare\) and \(\tortoise\) eventually point to the exact same node, a cycle is guaranteed. 
+
+\textbf{Phase 2: Finding the Cycle Start}
+Once they meet, we leave one pointer at the meeting node and move the other pointer back to the head of the list. We then advance \emph{both} pointers at the same speed (one step at a time). The node where they collide for the second time is the exact beginning of the cycle.
+
+\section{Theoretical Background and Proof}
+To understand why Phase 2 works, we must analyze the distances traveled by both pointers at the moment they first meet.
+
+\textbf{Visualization of the Distances:}
+\begin{center}
+\begin{tikzpicture}[
+  node/.style={draw, circle, inner sep=0pt, minimum size=1cm, thick},
+  pointer/.style={draw, -{Stealth[length=3mm]}, thick}
+]
+
+% Nodes
+\node[node, fill=gray!10] (head) at (0,0) {Head};
+\node[node, fill=blue!10] (start) at (4,0) {Start};
+\node[node, fill=red!10] (meet) at (8, -1.5) {Meet};
+
+% X path
+\draw[pointer] (head) -- (start) node[midway, above=2pt] {$X$};
+
+% Y path (top part of the cycle)
+\draw[pointer] (start) to[out=60, in=90] (8.5, 0) to[out=-90, in=30] (meet);
+\node at (6.5, 1.2) {$Y$};
+
+% Z path (bottom part of the cycle)
+\draw[pointer] (meet) to[out=-150, in=-60] (start);
+\node at (6, -1.8) {$Z$};
 
 \end{tikzpicture}
 \end{center}
-\subsubsection{Algorithm}
-We will start with two pointers \(\tortoise\) and \(\hare\) (shorts for tortoise and hare), both begin at the head of the linked list. Then, we let them traverse the linked list, \(\tortoise\) traverses one node in one step whereas \(\hare\) traverses two nodes in one step. There will be two outcomes:
+
+Let us define the following distance variables:
 \begin{itemize}
-\item \(\hare\) reaches the end of the singly linked list (nullptr). In this case, there exist no cycles, otherwise \(\hare\) would not have been able to reach nullptr.
-\item \(\hare\) and \(\tortoise\) "meet" at some node. This means that there exists a cycle in the linked list, otherwise \(\hare\) would not have been able to meet \(\tortoise\). Then we move one pointer back to the head of the linked list, the other remains where they meet. We let both of them traverse with the speed of one node per step. The node where they meet is the beginning of the cycle.
+    \item $X$: The distance (number of nodes) from the \textbf{Head} to the \textbf{Start} of the cycle.
+    \item $Y$: The distance from the \textbf{Start} of the cycle to the \textbf{Meeting} point.
+    \item $Z$: The remaining distance from the \textbf{Meeting} point back to the \textbf{Start} of the cycle.
 \end{itemize}
-\subsection{Theoretical Background}
-FTH works because \(\hare\) traverses the linked list faster than \(\tortoise\), so if there is no cycle and the linked list is a straight path, they will never meet and \(\hare\) will be able to reach the end (nullptr). Only with the help of a cycle can \(\tortoise\) catch up to and meet \(\hare\). Now, i will explain the method we use to detect the beginning of the cycle.
 
-Here is an example linked list for visualization:
-Let the number of nodes that are not in the cycle be \(a\) and the number of nodes that are in the cycle be \(b\). 
+From this, we know the total length of the cycle is $C = Y + Z$.
 
-The number of steps \( \tortoise \) needs to take to enter the cycle is \( a \) steps for the \( a \) nodes it needs to traverse. During that time, \( \hare \) has traversed \( 2 \cdot a \) nodes and has already entered the cycle. We mark the beginning of the cycle with index 0, the nodes after it with \( 1, 2, \cdots, b - 1 \). \( \hare \) is currently at node \( (2 \cdot a - a) \bmod b \) or node \( a \bmod b \) in the cycle.
+When the two pointers meet, we can express the total distance traveled by each:
+\begin{itemize}
+    \item Distance traveled by \(\tortoise\) = $X + Y$
+    \item Distance traveled by \(\hare\) = $X + Y + kC$ \quad (where $k \ge 1$ is the number of times the hare looped around the cycle)
+\end{itemize}
 
-
-Now we need to find out at which node do these two pointers meet for the first time, we can get the index of that node by solving this modulus equation:
-
+Because the hare moves exactly twice as fast as the tortoise, the distance covered by the hare is twice the distance covered by the tortoise:
 \begin{equation}
-n \bmod b = (c + 2 \cdot n) \bmod b
+2 \cdot (X + Y) = X + Y + kC
 \end{equation}
 
-with \(n\) is the number of steps \(\tortoise\) needs to take to meet \(\hare\). Or: 
-
+By subtracting $X + Y$ from both sides, we simplify this to:
 \begin{equation}
-n \bmod b = -c \bmod b
+X + Y = kC
 \end{equation}
 
-We need to find the smallest \(n\) that satisfies the above equation, that will be:
-
+Now, we want to solve for $X$ (the distance from the head to the cycle start):
 \begin{equation}
-n  = b-c
+X = kC - Y
 \end{equation}
-This mean after \(a\) steps, the pointer that remains in the cycle will reach the start of the cycle, and so does the other node that start again from the head of the linked list.
 
-In conclusion, the node where they meet again is the beginning of the cycle.
+We can break down $kC$ into $(k-1)C + C$. Substituting this in gives:
+\begin{equation}
+X = (k - 1)C + (C - Y)
+\end{equation}
+
+Looking at our definitions, the total cycle length $C$ minus the distance $Y$ is exactly the remaining distance $Z$ ($C - Y = Z$). Therefore:
+\begin{equation}
+X = (k - 1)C + Z
+\end{equation}
+
+\textbf{Conclusion:}\\
+Equation 5 fundamentally proves the algorithm. It states that the distance from the Head to the Start ($X$) is equal to the distance from the Meeting point to the Start ($Z$), plus some number of full loops around the cycle ($(k - 1)C$). 
+
+Therefore, if we place one pointer at the Head (which needs to travel $X$ steps to reach the Start) and leave one pointer at the Meeting point (which needs to travel $Z$ steps to reach the Start), advancing them both by one step at a time guarantees they will collide exactly at the starting node of the cycle.
+
 \end{document}
